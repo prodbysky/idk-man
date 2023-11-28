@@ -101,7 +101,6 @@ fn tokenize(src: String) -> Vec<TokenType> {
 }
 
 fn crossref_blocks(program: Vec<TokenType>) -> Vec<TokenType> {
-   
     let mut stack: Vec<usize> = vec![];
     let mut res = program.clone();
     for (ip, op) in program.iter().enumerate() {
