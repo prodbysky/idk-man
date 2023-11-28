@@ -12,18 +12,26 @@
 ## Language usage
 ### Arithmetics
  - Add 34 and 35
- - '34 35 +' 
+```
+34 35 +
+```
 ### Stack manipulation
  - Duplicate 100 on the stack
- - '100 dup'
+```
+100 dup
+```
 ### Control flow
 #### if
  - If 69 < 100
- - '34 35 + 100 < if'
- - '303 print'
- - 'end'
+```
+34 35 + 100 < if
+303 print
+end
+```
 #### while
  - A for loop
- - '69 while dup 0 > do'
- - 'dup print'
- - 'wend'
+ ```
+ 69 while dup 0 > do
+ dup print
+ wend
+ ```
