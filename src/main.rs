@@ -45,6 +45,9 @@ enum TokenType {
 
     // Stack manipulators
     Dup,
+    
+    // THIS IS FOR THE FUTURE IMPL OF MACROS
+    UserDefinedWord(String),
 
     Print,
 }
@@ -77,21 +80,33 @@ fn tokenize(src: String) -> Vec<TokenType> {
     let mut tokens: Vec<TokenType> = vec![];
     let chars: Vec<char> = src.chars().collect(); 
     let mut i = 0;
-    let current_char = |i| {chars[i]};
+    
+    // Parse a word out of the source
+    let curr_word = |mut i: usize| {
+        let current_char = |i: usize| {chars[i]};
+        let mut word = String::new();
+        while !current_char(i).is_whitespace() {
+            word.push(current_char(i));
+            i += 1;
+        }
+        (word, i)
+    };
+
     let kws = KEYWORDS.read().expect("Failed to acquire KEYWORDS...");
 
     while i < src.len() {
-        let mut current_word = String::new();
-        while !current_char(i).is_whitespace() {
-            current_word.push(current_char(i));
-            i += 1;
-        }
+        let (current_word, temp_i) = curr_word(i);
+        i = temp_i;
         if current_word != "" {
             if let Ok(num) = current_word.parse::<i32>() {
                 tokens.push(TokenType::PushInt(num));
             } else {
-                let token = kws.get(current_word.as_str()).expect("A non-existent keyword... This could be a bug in the tokenizer");
-                tokens.push(token.clone());
+                // If the word is a existing keyword
+                if let Some(token) = kws.get(current_word.as_str()) {
+                    tokens.push(token.clone());
+                } else {
+                    tokens.push(TokenType::UserDefinedWord(current_word));
+                }
             }
         }
         
@@ -133,6 +148,7 @@ fn crossref_blocks(program: Vec<TokenType>) -> Vec<TokenType> {
 }
 
 fn run(program: Vec<TokenType>) {
+    println!("{:?}", program);
     let mut stack: Vec<StackValue> = vec![];
     let mut i: usize = 0;
     while i < program.len() {
@@ -232,7 +248,6 @@ fn run(program: Vec<TokenType>) {
                     _ => {},
                 }
             },
-            TokenType::While => { i += 1 },
             TokenType::Do(ip) => {
                 let a = stack.pop().expect("Stack underflow when interpreting TokenType::Do(i32)");
                 match a {
@@ -248,7 +263,6 @@ fn run(program: Vec<TokenType>) {
                 }
             },
             TokenType::WEnd(ip) => { i = ip; },
-            TokenType::End => { i += 1 },
             TokenType::Dup => {
                 let a = stack.pop().expect("Stack underflow when interpreting TokenType::Dup"); 
                 stack.push(a.clone());
@@ -260,6 +274,9 @@ fn run(program: Vec<TokenType>) {
                 println!("{}", a);
                 i += 1;
             },
+            // Words that do not effect the execution of the program
+            TokenType::While | TokenType::End => {i += 1;}
+            TokenType::UserDefinedWord(_) => {},
         }
     }
 }
